@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>CODE Gold SystemCore Lab</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="lab.css">
+</head>
+<body>
+<button class="reset corner" id="resetBtn" type="button" title="Erase your answers and progress on this page">Reset progress</button>
+<div class="wrap">
+  <aside class="rail">
+    <div class="brand">
+      <span class="team">FRC 8352 · CODE Gold</span>
+      <span class="name">SystemCore Lab</span>
+    </div>
+    <div class="score" aria-live="polite">
+      <div class="big"><span id="scoreRight">0</span> <small>/ <span id="scoreTotal">0</span> correct</small></div>
+      <div class="bar"><i id="scoreBar"></i></div>
+      <div class="sub" id="scoreSub">0 of 0 questions answered</div>
+      <div class="sub" id="taskSub">0 of 0 hands-on tasks done</div>
+      <div class="sub" id="simSub" hidden>0 of 0 sim challenges done</div>
+    </div>
+    <ul class="toc" id="toc"></ul>
+  </aside>
+
+  <main>
+    <section class="intro">
+      <span class="eyebrow">2027 season · robot electrical</span>
+      <h1>Wiring the new controller: SystemCore</h1>
+      <p class="lede">In 2027 SystemCore replaces the roboRIO. This lab covers what changes when you wire it, what stays the same, and how to plan our robot's wiring before the hardware arrives.</p>
+      <div class="legend" style="grid-template-columns: repeat(auto-fit, minmax(190px, 1fr))">
+        <div><b>Try it</b><span>Hands-on tasks. Tick each step as you do it. Some need a mentor or the robot.</span></div>
+        <div><b>Hint first</b><span>Stuck? Open the hint. It shows how to start, not the answer. Hints don't cost points.</span></div>
+        <div><b>Worked solution</b><span>After you answer, you get the steps. Check your reasoning, not just your answer.</span></div>
+      </div>
+    </section>
+    <div class="lessons" id="lessons"></div>
+    <section class="done-card">
+      <h2>Finished?</h2>
+      <p id="doneText">Answer every question to see your result here.</p>
+      <ul id="doneList"></ul>
+    </section>
+  </main>
+</div>
+
+<script src="lab.js"></script>
+<script>
+/* ===================== lessons ===================== */
+const SC_LESSONS = [
+{
+  id: "systemcore", status: "Preliminary", title: "Wiring the 2027 controller: SystemCore", where: "Robot electrical · 2027 season",
+  body: `
+<p>In 2027 the roboRIO is replaced by <b>SystemCore</b>, a new robot controller built by Limelight. It does the same job: it runs our Java code, talks to the motors over CAN, and connects to the radio.</p>
+<p><b>Read this first:</b> this lesson is based on beta testing notes from November 2026. Some details already changed between the alpha and beta units. Before wiring a real robot, check the official <a href="https://docs.wpilib.org/en/2027/" target="_blank" rel="noopener">2027 WPILib docs</a> with a mentor.</p>
+<p><b>What stays the same:</b> battery → 120 A main breaker → power distribution (REV PDH or CTRE PDP), motor controllers powered from the PDH, and CAN IDs set in Phoenix Tuner X.</p>
+<div class="figure"><div class="figure-scroll">
+<svg viewBox="0 0 640 320" width="640" height="320" role="img" aria-label="Wiring diagram. Battery to 120 amp main breaker to PDH. PDH powers the motor controllers and powers SystemCore at battery voltage through its MicroFit power and bridge port. SystemCore's CAN bus can_s0 runs to the motor controllers, CANcoders and Pigeon. SystemCore connects to the radio by Ethernet and to the robot signal light through its RSL port. An optional MotionCore can connect to the same power and bridge port instead.">
+<g font-size="12" fill="var(--ink)">
+<rect x="10" y="30" width="100" height="46" rx="6" fill="var(--surface)" stroke="var(--ink)" stroke-width="2"/><text x="60" y="58" text-anchor="middle">Battery</text>
+<rect x="140" y="30" width="110" height="46" rx="6" fill="var(--surface)" stroke="var(--ink)" stroke-width="2"/><text x="195" y="51" text-anchor="middle">Main breaker</text><text x="195" y="66" text-anchor="middle" fill="var(--muted)" font-size="11">120 A</text>
+<rect x="280" y="22" width="120" height="62" rx="6" fill="var(--surface)" stroke="var(--ink)" stroke-width="2"/><text x="340" y="50" text-anchor="middle">PDH</text><text x="340" y="66" text-anchor="middle" fill="var(--muted)" font-size="10">power board</text>
+<rect x="450" y="22" width="180" height="62" rx="6" fill="var(--surface)" stroke="var(--ink)" stroke-width="2"/><text x="540" y="46" text-anchor="middle">Motor controllers,</text><text x="540" y="62" text-anchor="middle">CANcoders, Pigeon</text>
+<rect x="230" y="200" width="180" height="96" rx="8" fill="var(--gold-fill)" stroke="var(--ink)" stroke-width="2"/><text x="320" y="240" text-anchor="middle" fill="#142030" font-weight="600">SystemCore</text><text x="320" y="258" text-anchor="middle" fill="#142030" font-size="11">replaces the roboRIO</text>
+<rect x="470" y="190" width="160" height="40" rx="6" fill="var(--surface)" stroke="var(--ink)" stroke-width="2"/><text x="550" y="215" text-anchor="middle">Radio</text>
+<rect x="470" y="256" width="160" height="40" rx="6" fill="var(--surface)" stroke="var(--ink)" stroke-width="2"/><text x="550" y="281" text-anchor="middle">Robot signal light</text>
+<rect x="20" y="210" width="150" height="62" rx="6" fill="none" stroke="var(--muted)" stroke-width="2" stroke-dasharray="6 4"/><text x="95" y="236" text-anchor="middle" fill="var(--muted)">MotionCore</text><text x="95" y="252" text-anchor="middle" fill="var(--muted)" font-size="11">optional</text>
+</g>
+<g stroke="var(--bad)" stroke-width="3" fill="none">
+<line x1="110" y1="53" x2="140" y2="53"/><line x1="250" y1="53" x2="280" y2="53"/><line x1="400" y1="53" x2="450" y2="53"/>
+<polyline points="320,84 320,200"/>
+</g>
+<text x="328" y="128" font-size="11" fill="var(--bad)">battery voltage (no VRM)</text>
+<text x="328" y="143" font-size="11" fill="var(--bad)">MicroFit → Pwr/Bridge port</text>
+<polyline points="400,200 400,170 600,170 600,84" fill="none" stroke="var(--gold)" stroke-width="3" stroke-dasharray="8 5"/>
+<text x="594" y="108" font-size="11" fill="var(--gold)" text-anchor="end">CAN FD bus can_s0</text>
+<g stroke="var(--ink)" stroke-width="2"><line x1="410" y1="210" x2="470" y2="210"/><line x1="410" y1="276" x2="470" y2="276"/></g>
+<text x="440" y="204" font-size="10" fill="var(--muted)" text-anchor="middle">Ethernet</text><text x="440" y="270" font-size="10" fill="var(--muted)" text-anchor="middle">RSL</text>
+<line x1="170" y1="241" x2="230" y2="241" stroke="var(--muted)" stroke-width="2" stroke-dasharray="6 4"/>
+<text x="200" y="234" font-size="10" fill="var(--muted)" text-anchor="middle">Bridge</text>
+</svg></div>
+<span class="cap">Red: power. Gold dashes: CAN. Plain lines: Ethernet and the light. On beta units the Pwr/Bridge port is the only power input. It gets power either straight from the PDH (with the MicroFit-to-XT30 cable) or through the Bridge cable from a MotionCore, never both.</span></div>
+<div class="tbl"><table>
+<tr><th></th><th>roboRIO (now)</th><th>SystemCore (2027)</th></tr>
+<tr><td>Power</td><td>Fused PDH channel into the V/C connector</td><td>Battery voltage into the MicroFit Pwr/Bridge port. Never through a VRM: it can't supply enough current.</td></tr>
+<tr><td>CAN</td><td>1 bus (plus a CANivore)</td><td>5 CAN FD buses, named <code>can_s0</code> to <code>can_s4</code> in code. A CANivore is still supported.</td></tr>
+<tr><td>CAN termination</td><td>PDH switch or a 120 Ω resistor at the end</td><td>Reported to be built in on each bus. Check before you remove a terminator.</td></tr>
+<tr><td>DIO, PWM, analog</td><td>Separate headers</td><td>6 SmartIO ports. You choose in code what each one is.</td></tr>
+<tr><td>Relay ports</td><td>4</td><td>None</td></tr>
+<tr><td>I2C</td><td>roboRIO pin order</td><td>Qwiic pin order. Old roboRIO cables need <b>SCL and SDA swapped</b>.</td></tr>
+<tr><td>Limit switches</td><td>Switch connects signal to ground</td><td>Same on beta units. (Alpha units were different: signal to +3.3 V.)</td></tr>
+<tr><td>USB</td><td>USB-B to the laptop, USB-A ports</td><td>USB-C to the laptop (and for flashing), 4 USB-A ports</td></tr>
+</table></div>
+<p><b>Wiring order</b>, with the battery unplugged the whole time:</p>
+<ol>
+<li>Battery, main breaker and PDH, exactly like now.</li>
+<li>SystemCore power: a PDH channel to its Pwr/Bridge port at battery voltage. Ask a mentor which channel and fuse, since that isn't published yet.</li>
+<li>CAN: from SystemCore's <code>can_s0</code> port, daisy-chain the motor controllers, CANcoders and Pigeon. Our 13 drivetrain devices fit on one bus. Other buses can go to other mechanisms.</li>
+<li>Ethernet to the radio, and the robot signal light to the RSL port (2-pin Molex SL).</li>
+<li>Sensors: plug into SmartIO ports, and use the Qwiic pin order for I2C.</li>
+<li>Check every connection's polarity, then plug in the battery with the robot on blocks.</li>
+</ol>`,
+  tasks: [
+    { id: "t-scplan", title: "Make a SystemCore wiring plan for our drivetrain (with a mentor)", need: "Paper or a whiteboard, this lesson, and the 2027 WPILib docs",
+      steps: ["List every CAN device on our drivetrain: drive motors 10, 21, 31, 41; steer motors 11, 22, 32, 42; CANcoders 1–4; Pigeon 2 gyro 5. That makes 13.", "Decide which SystemCore CAN bus each one goes on, and write the daisy-chain order.", "Mark where SystemCore gets its power and which PDH channel it uses.", "Add the radio, the robot signal light and any sensors, with the port each uses.", "Open the official 2027 WPILib docs and check every row of the table above. Circle anything that changed."],
+      expect: "A one-page drawing a teammate could wire from, with every device, port and power source labeled, and a list of anything that changed since this lesson was written." }
+  ],
+  questions: [
+    { id: "sc1", type: "mc", q: "How many separate CAN buses does SystemCore have built in?",
+      options: ["1, like the roboRIO", "2", "5", "20"], answer: 2,
+      hint: "Look at the CAN row of the table.",
+      steps: ["The roboRIO has one CAN bus.", "SystemCore has five: can_s0 to can_s4.", "20 is how many a MotionCore adds, not SystemCore itself."] },
+    { id: "sc2", type: "mc", q: "Someone wants to power SystemCore from a VRM, like old radios. Why not?",
+      options: ["The VRM is the wrong color", "SystemCore needs battery voltage and more current than a VRM can supply", "VRMs are illegal in 2027", "It would make the CAN bus slower"], answer: 1,
+      hint: "Read the Power row of the table.",
+      steps: ["A VRM turns battery voltage into a lower, regulated voltage, with a small current limit.", "SystemCore expects full battery voltage.", "Under full load it needs more current than a VRM can give, so it could brown out mid-match."] },
+    { id: "sc3", type: "mc", q: "You plug a color sensor into SystemCore's I2C port with the cable from last year's robot. It reads nothing. What should you check first?",
+      options: ["The CAN ID", "The SCL and SDA wires: SystemCore uses the Qwiic pin order, so old roboRIO cables need them swapped", "Whether the robot is enabled", "The radio"], answer: 1,
+      hint: "What does the table say about I2C?",
+      steps: ["I2C uses two signal wires: SCL (clock) and SDA (data).", "SystemCore puts them in the Qwiic order, which is different from the roboRIO's.", "A roboRIO cable plugged in as-is has them backward, so the sensor never answers."] },
+    { id: "sc4", type: "mc", q: "In code, what is SystemCore's first CAN bus called?",
+      options: ["rio", "can0", "can_s0", "canivore"], answer: 2,
+      hint: "It's in the CAN row.",
+      steps: ["The five buses are named can_s0 to can_s4.", "The s is for SystemCore. MotionCore's buses are can_d0 to can_d19.", "Names like these may still change before kickoff, so check the final docs."] },
+    { id: "sc5", type: "mc", q: "Why is this lesson marked Preliminary?",
+      options: ["It isn't finished being written", "SystemCore is still in testing, and details like power and pinouts already changed between alpha and beta units", "Nobody knows what SystemCore is", "It only applies to FTC"], answer: 1,
+      hint: "Read the first two paragraphs.",
+      steps: ["The information comes from alpha and beta test units.", "Some things, like the limit-switch wiring and the power inputs, already changed between them.", "Always check the official 2027 docs before wiring a real robot."] }
+  ]
+}
+];
+
+Lab.start({
+  key: "cg-systemcore-lab-v1",
+  lessons: SC_LESSONS,
+  challenges: {},
+  sims: {}
+});
+</script>
+</body>
+</html>
