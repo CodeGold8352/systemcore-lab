@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>CODE Gold SystemCore Lab</title>
+<title>CODE Gold Wiring Lab</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,7 +16,7 @@
   <aside class="rail">
     <div class="brand">
       <span class="team">FRC 8352 · CODE Gold</span>
-      <span class="name">SystemCore Lab</span>
+      <span class="name">Wiring Lab</span>
     </div>
     <div class="score" aria-live="polite">
       <div class="big"><span id="scoreRight">0</span> <small>/ <span id="scoreTotal">0</span> correct</small></div>
@@ -30,9 +30,9 @@
 
   <main>
     <section class="intro">
-      <span class="eyebrow">2027 season · robot electrical</span>
-      <h1>Wiring the new controller: SystemCore</h1>
-      <p class="lede">In 2027 SystemCore replaces the roboRIO. This lab covers what changes when you wire it, what stays the same, and how to plan our robot's wiring before the hardware arrives.</p>
+      <span class="eyebrow">Robot electrical</span>
+      <h1>Wiring the robot</h1>
+      <p class="lede">Four labs on robot wiring. The first three are the basics for any season: how power gets from the battery to the motors, how CAN connects the motors to the controller, and how to make connections that survive a match. The last one covers SystemCore, the new controller for 2027.</p>
       <div class="legend" style="grid-template-columns: repeat(auto-fit, minmax(190px, 1fr))">
         <div><b>Try it</b><span>Hands-on tasks. Tick each step as you do it. Some need a mentor or the robot.</span></div>
         <div><b>Hint first</b><span>Stuck? Open the hint. It shows how to start, not the answer. Hints don't cost points.</span></div>
@@ -52,6 +52,159 @@
 <script>
 /* ===================== lessons ===================== */
 const SC_LESSONS = [
+{
+  id: "power", title: "The power path: battery to motor", where: "Robot electrical · any season",
+  body: `
+<p>Every FRC robot gets its power the same way. Electricity leaves the battery, goes through the <b>main breaker</b>, gets split up by the <b>power distribution hub (PDH)</b>, and each branch goes through its own breaker or fuse to one device. Then it comes back to the battery on the black wire.</p>
+<div class="figure"><div class="figure-scroll">
+<svg viewBox="0 0 640 210" width="640" height="210" role="img" aria-label="Power path diagram. Battery, through the SB50 connector, to the 120 amp main breaker, to the PDH. Each PDH channel has a 40 amp breaker feeding one motor controller, which drives one motor. The black negative wire returns from the PDH to the battery.">
+<g font-size="12" fill="var(--ink)">
+<rect x="10" y="40" width="90" height="56" rx="6" fill="var(--surface)" stroke="var(--ink)" stroke-width="2"/><text x="55" y="64" text-anchor="middle">Battery</text><text x="55" y="80" text-anchor="middle" fill="var(--muted)" font-size="11">12 V</text>
+<rect x="140" y="40" width="100" height="56" rx="6" fill="var(--surface)" stroke="var(--ink)" stroke-width="2"/><text x="190" y="64" text-anchor="middle">Main breaker</text><text x="190" y="80" text-anchor="middle" fill="var(--muted)" font-size="11">120 A</text>
+<rect x="280" y="30" width="110" height="76" rx="6" fill="var(--gold-fill)" stroke="var(--ink)" stroke-width="2"/><text x="335" y="64" text-anchor="middle" fill="#142030" font-weight="600">PDH</text><text x="335" y="80" text-anchor="middle" fill="#142030" font-size="11">splits power</text>
+<rect x="430" y="40" width="90" height="56" rx="6" fill="var(--surface)" stroke="var(--ink)" stroke-width="2"/><text x="475" y="64" text-anchor="middle">Motor</text><text x="475" y="80" text-anchor="middle">controller</text>
+<rect x="550" y="40" width="80" height="56" rx="6" fill="var(--surface)" stroke="var(--ink)" stroke-width="2"/><text x="590" y="72" text-anchor="middle">Motor</text>
+</g>
+<g stroke="var(--bad)" stroke-width="3" fill="none"><line x1="100" y1="58" x2="140" y2="58"/><line x1="240" y1="58" x2="280" y2="58"/><line x1="390" y1="58" x2="430" y2="58"/></g>
+<g stroke="var(--ink)" stroke-width="3" fill="none"><polyline points="55,96 55,150 335,150 335,106"/><line x1="410" y1="80" x2="430" y2="80"/><line x1="390" y1="80" x2="410" y2="80"/></g>
+<line x1="520" y1="68" x2="550" y2="68" stroke="var(--muted)" stroke-width="2"/>
+<text x="120" y="50" font-size="10" fill="var(--muted)" text-anchor="middle">SB50</text>
+<text x="260" y="50" font-size="10" fill="var(--muted)" text-anchor="middle">6 AWG</text>
+<text x="410" y="50" font-size="10" fill="var(--muted)" text-anchor="middle">40 A</text>
+<text x="195" y="168" font-size="11" fill="var(--muted)" text-anchor="middle">black: back to the battery (−)</text>
+<text x="410" y="196" font-size="11" fill="var(--muted)" text-anchor="middle">one breaker and one pair of wires for each device</text>
+</svg></div>
+<span class="cap">Red: positive (+). Black: negative (−). The thick 6 AWG wires carry the whole robot's current, so they are the biggest wires on the robot.</span></div>
+<p><b>What each part does:</b></p>
+<ul>
+<li><b>Battery:</b> 12 V lead-acid. It plugs in with a big red <b>SB50</b> (Anderson) connector, so it can be swapped in seconds between matches.</li>
+<li><b>Main breaker (120 A):</b> the on/off switch for the whole robot, and the protection for the whole robot. If the robot pulls too much current, it trips. Push the red button to turn the robot off; press the black lever back in to turn it on.</li>
+<li><b>PDH:</b> splits power into channels. Each channel has a breaker (up to 40 A) or a fuse that protects that one wire and device.</li>
+<li><b>Breakers and fuses:</b> they protect the <b>wire</b>, not just the device. A wire carrying more current than it is rated for gets hot and can melt.</li>
+</ul>
+<p><b>Wire size goes with the breaker.</b> A smaller AWG number means a <b>thicker</b> wire. This is the usual minimum, but check the robot rules in this year's game manual:</p>
+<div class="tbl"><table>
+<tr><th>Breaker or fuse</th><th>Smallest wire allowed</th><th>Example on our robot</th></tr>
+<tr><td>Main path (battery, main breaker, PDH)</td><td>6 AWG</td><td>Battery leads</td></tr>
+<tr><td>40 A</td><td>12 AWG</td><td>Kraken drive and steer motors</td></tr>
+<tr><td>30 A</td><td>14 AWG</td><td>Smaller motors</td></tr>
+<tr><td>20 A</td><td>18 AWG</td><td>Controller, radio power, lights</td></tr>
+</table></div>
+<p><b>Colors:</b> positive wires are red (white, brown, yellow, or black with a stripe are allowed too). Negative wires are black or blue. Follow the colors and anyone on the team can check your work at a glance.</p>`,
+  tasks: [
+    { id: "t-tracepower", title: "Trace the power path on our robot (with a mentor)", need: "The robot with the battery unplugged",
+      steps: ["Unplug the battery. Say out loud that it's unplugged before you touch anything.", "Find the SB50 connector and follow the red 6 AWG wire to the main breaker.", "Follow it from the main breaker to the PDH.", "Pick one drive motor. Find its PDH channel and read the breaker size printed on it.", "Follow that motor's red and black wires from the PDH to the motor controller.", "Check: is the wire at least as thick as the table says for that breaker?"],
+      expect: "You can point to every part of the power path and say what the breaker on your motor's channel is rated for." }
+  ],
+  questions: [
+    { id: "pw1", type: "mc", q: "What is the main breaker for?",
+      options: ["It makes the robot go faster", "It's the robot's on/off switch, and it cuts all power if the robot pulls too much current", "It charges the battery", "It sends signals to the motors"], answer: 1,
+      hint: "Read the list of what each part does.",
+      steps: ["The main breaker sits between the battery and everything else.", "Pushing the red button turns the whole robot off.", "If the total current gets too high, it trips by itself to protect the wiring."] },
+    { id: "pw2", type: "mc", q: "A motor is on a 40 A breaker. What is the thinnest wire you're allowed to use for it?",
+      options: ["18 AWG", "14 AWG", "12 AWG", "22 AWG"], answer: 2,
+      hint: "Find the 40 A row in the table.",
+      steps: ["The table says 40 A needs at least 12 AWG.", "A smaller AWG number means a thicker wire.", "18 and 22 AWG are thinner and would get too hot at 40 A."] },
+    { id: "pw3", type: "mc", q: "Which wire is thicker?",
+      options: ["18 AWG", "12 AWG", "They're the same", "It depends on the color"], answer: 1,
+      hint: "AWG numbers work backward.",
+      steps: ["In AWG, smaller numbers are thicker wires.", "12 is smaller than 18, so 12 AWG is thicker.", "That's why the main path, which carries the most current, uses 6 AWG."] },
+    { id: "pw4", type: "mc", q: "What do breakers and fuses mainly protect?",
+      options: ["The battery from being stolen", "The wire, so it can't carry more current than it's rated for and overheat", "The driver station", "The code"], answer: 1,
+      hint: "What happens to a thin wire carrying too much current?",
+      steps: ["Too much current through a wire makes it hot.", "A hot wire can melt its insulation and short out.", "The breaker trips before that happens. That's why the wire size has to match the breaker."] },
+    { id: "pw5", type: "mc", q: "Which color should a negative (−) power wire be?",
+      options: ["Red", "Black or blue", "Yellow", "Any color"], answer: 1,
+      hint: "Read the Colors paragraph.",
+      steps: ["Positive is red (or white, brown, yellow, or black with a stripe).", "Negative is black or blue.", "Using the right colors lets inspectors and teammates check polarity at a glance."] }
+  ]
+},
+{
+  id: "can", title: "CAN: how the controller talks to the motors", where: "Robot electrical · any season",
+  body: `
+<p>Power makes the motors able to move. <b>CAN</b> tells them what to do. CAN is a pair of thin signal wires that runs from the robot controller to every smart device: motor controllers, CANcoders, the Pigeon gyro and the PDH.</p>
+<ul>
+<li><b>Two wires, two colors:</b> <b>yellow is CAN high</b> and <b>green is CAN low</b>. Always connect yellow to yellow and green to green.</li>
+<li><b>Daisy chain:</b> the bus goes from device to device in one line, like a string of lights. It does not branch out like a tree.</li>
+<li><b>Termination:</b> each end of the chain needs a 120 Ω resistor. One end is usually the controller, which has one built in. The PDH has a switch to turn its resistor on, so it's often put at the other end.</li>
+<li><b>Every device has an ID.</b> We set them in Phoenix Tuner X. Two devices of the same type can't share an ID.</li>
+</ul>
+<p>Our drivetrain's CAN devices:</p>
+<div class="tbl"><table>
+<tr><th>Device</th><th>CAN IDs</th></tr>
+<tr><td>Drive motors (Kraken X60)</td><td>10, 21, 31, 41</td></tr>
+<tr><td>Steer motors (Kraken X60)</td><td>11, 22, 32, 42</td></tr>
+<tr><td>CANcoders (wheel angle)</td><td>1, 2, 3, 4</td></tr>
+<tr><td>Pigeon 2 gyro</td><td>5</td></tr>
+</table></div>
+<p><b>Why the chain matters:</b> if one connection in the middle comes loose, every device after it can stop talking to the controller. On the field that looks like a module that suddenly won't steer. In Phoenix Tuner X it looks like a group of devices disappearing at once, which tells you where to look.</p>`,
+  tasks: [
+    { id: "t-canchain", title: "Find our CAN chain (with a mentor)", need: "The robot, a laptop with Phoenix Tuner X",
+      steps: ["Power on the robot and connect Phoenix Tuner X.", "Write down every device it finds and its ID. Compare with the table in this lesson.", "Turn the robot off and unplug the battery.", "Starting at the controller, follow the yellow and green wires and write the order of the devices.", "Find where the chain ends and check how it's terminated."],
+      expect: "A list of the CAN chain in order, from the controller to the terminated end, with every ID matching Tuner X." }
+  ],
+  questions: [
+    { id: "cn1", type: "mc", q: "Which color is CAN high?",
+      options: ["Green", "Yellow", "Red", "Black"], answer: 1,
+      hint: "It's in the first bullet.",
+      steps: ["CAN uses yellow and green.", "Yellow is CAN high, green is CAN low.", "Red and black are power, not CAN."] },
+    { id: "cn2", type: "mc", q: "How should CAN devices be connected?",
+      options: ["Each one wired straight to the controller, like a star", "In one daisy chain from device to device, with a terminator at each end", "Any way, as long as every device is plugged in", "Through the PDH breakers"], answer: 1,
+      hint: "Read the Daisy chain and Termination bullets.",
+      steps: ["CAN is one line from end to end.", "Each device connects to the one before and the one after.", "Both ends of the line get a 120 Ω terminator."] },
+    { id: "cn3", type: "mc", q: "In Tuner X, the two back-left motors and the back-left CANcoder all vanish at once. What's the most likely cause?",
+      options: ["The code has a bug", "A loose CAN connection just before those devices in the chain", "The battery is too full", "The main breaker is off"], answer: 1,
+      hint: "What happens to devices after a break in a daisy chain?",
+      steps: ["If the main breaker were off, everything would vanish, not just three devices.", "Devices next to each other in the chain disappearing together points to one break.", "Check the connector just before the first missing device."] },
+    { id: "cn4", type: "num", q: "How many CAN devices are on our drivetrain?", answer: 13, tol: 0, unit: "devices",
+      hint: "Add up every ID in the table.",
+      steps: ["4 drive motors and 4 steer motors make 8.", "4 CANcoders make 12.", "The Pigeon makes 13."] }
+  ]
+},
+{
+  id: "connections", title: "Good connections and checking your work", where: "Robot electrical · any season",
+  body: `
+<p>Most robot problems at competition are not code. They're loose wires. A connection that looks fine on the bench can wiggle loose after a few hard hits.</p>
+<p><b>Rules for a good connection:</b></p>
+<ul>
+<li><b>No bare copper showing</b> outside the connector.</li>
+<li><b>Tug test every crimp.</b> Pull firmly on the wire. If it moves, cut it off and redo it.</li>
+<li><b>Strain relief:</b> zip-tie wires near each connector so a pull on the wire doesn't pull on the connection.</li>
+<li><b>Keep wires away</b> from moving parts, sharp edges and the wheels.</li>
+<li><b>Label</b> both ends of long wires, so you know what they are without tracing them.</li>
+</ul>
+<p><b>Check before you power on.</b> With the battery unplugged, use a multimeter:</p>
+<ol>
+<li><b>Battery voltage:</b> a charged battery reads about 12.5 to 13 V with nothing connected. Under 12 V, swap it.</li>
+<li><b>Short check:</b> set the meter to continuity (it beeps). Touch the positive and negative inputs of the PDH. It should <b>not</b> beep. A beep means positive is touching negative somewhere: don't plug the battery in.</li>
+<li><b>Polarity:</b> check red goes to + and black goes to − at every device you changed.</li>
+</ol>
+<p>When the battery goes in for the first time after wiring, keep the robot <b>on blocks</b> with its wheels off the ground and someone at the main breaker.</p>`,
+  tasks: [
+    { id: "t-crimp", title: "Make and test a crimp (with a mentor)", need: "Scrap wire, a wire stripper, a crimper and connectors",
+      steps: ["Strip the wire to the length the connector needs. No extra copper.", "Crimp the connector with the right die on the crimper.", "Look: no copper strands sticking out, and the insulation goes right up to the connector.", "Tug test: pull hard. It should not move.", "Have the mentor check it, then make three more."],
+      expect: "Four crimps that pass the tug test with no bare copper showing." },
+    { id: "t-precheck", title: "Do a power-on check (with a mentor)", need: "The robot, a charged battery and a multimeter",
+      steps: ["Measure the battery voltage and write it down.", "With the battery unplugged, do the short check on the PDH inputs.", "Tug-test the battery leads and the main breaker connections.", "Plug the battery in with the robot on blocks and turn on the main breaker.", "Check that the PDH, motor controllers and controller light up."],
+      expect: "Battery voltage written down, no beep on the short check, and every device lit after power on." }
+  ],
+  questions: [
+    { id: "cx1", type: "mc", q: "You tug a crimp and the wire slides a little. What should you do?",
+      options: ["Leave it, it's mostly in", "Add tape over it", "Cut it off and crimp a new connector", "Glue it"], answer: 2,
+      hint: "Read the tug-test rule.",
+      steps: ["A crimp that moves will get worse with every hit.", "Tape and glue hide the problem without fixing it.", "Cut it off and redo it."] },
+    { id: "cx2", type: "num", q: "A charged battery reads about how many volts with nothing connected? (Within half a volt is fine.)", answer: 12.8, tol: 0.5, unit: "V",
+      hint: "It's in step 1 of the checks.",
+      steps: ["A charged battery reads about 12.5 to 13 V.", "Under 12 V it's too low for a match.", "Swap it and put it on the charger."] },
+    { id: "cx3", type: "mc", q: "On the short check, the meter beeps across the PDH's + and − inputs. What does that mean?",
+      options: ["Everything's fine", "Positive is touching negative somewhere. Find it before plugging in the battery", "The battery is charged", "The CAN bus is terminated"], answer: 1,
+      hint: "What should the meter do on the short check?",
+      steps: ["Continuity mode beeps when two points are connected.", "+ and − should never be directly connected.", "A beep means a short. Plugging in the battery could trip the main breaker or burn a wire."] },
+    { id: "cx4", type: "write", q: "Pick one wire on our robot that runs near a moving part. Explain how it's kept safe, or how you'd fix it if it isn't.",
+      hint: "Think about zip ties, wire guides and distance from the moving part.",
+      model: "The wires to the swerve steer motor run past the spinning wheel. They're zip-tied to the frame every few inches so they can't sag into the wheel, and there's a little slack at the motor so turning doesn't pull on the connector. If a wire hung loose near the wheel, I'd route it along the frame and zip-tie it, away from the wheel and any sharp edges." }
+  ]
+},
 {
   id: "systemcore", status: "Preliminary", title: "Wiring the 2027 controller: SystemCore", where: "Robot electrical · 2027 season",
   body: `
